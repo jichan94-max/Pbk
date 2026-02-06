@@ -6,7 +6,9 @@ API_KEY = os.environ.get("GEMINI_API_KEY")
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 MY_CHAT_ID = os.environ.get("MY_CHAT_ID")
 
-genai.configure(api_key=API_KEY)
+# [수정포인트] 구글 AI 설정을 최신 안정화 버전으로 고정
+genai.configure(api_key=API_KEY, transport='rest') 
+
 safety_settings = [
     {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
     {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
@@ -14,12 +16,13 @@ safety_settings = [
     {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
 ]
 
-# ★ 모델 경로 수정 완료
+# [수정포인트] 모델 이름을 가장 확실한 경로로 지정
 model = genai.GenerativeModel(
-    model_name="models/gemini-1.5-flash", 
+    model_name="gemini-1.5-flash", # 또는 "models/gemini-1.5-flash"
     system_instruction="너는 권위적인 40대 언니 '보경'이야. 수아를 엄격하게 관리하고 차갑게 대해.",
     safety_settings=safety_settings
 )
+
 bot = telebot.TeleBot(BOT_TOKEN)
 chat_session = model.start_chat(history=[])
 
@@ -35,9 +38,7 @@ def handle_message(message):
         bot.reply_to(message, response.text)
     except Exception as e:
         error_info = str(e)
-        if "safety" in error_info.lower():
-            bot.reply_to(message, "💢 구글 검열 때문에 막혔어. 조금 순화해봐.")
-        else:
-            bot.reply_to(message, f"💢 아직 뇌가 덜 풀렸어. 이거 다시 보여줘:\n`{error_info[:150]}`")
+        # 에러 메시지가 너무 길면 핵심만 출력
+        bot.reply_to(message, f"💢 보경언니 뇌정지:\n`{error_info[:100]}`")
 
 bot.polling()
