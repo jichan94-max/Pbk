@@ -10,9 +10,9 @@ MY_CHAT_ID = os.environ.get("MY_CHAT_ID")
 # 2. 구글 AI 설정
 genai.configure(api_key=API_KEY)
 
-# 모델 설정 (가장 안정적인 호출 방식)
+# [수정] 모델 이름을 전체 경로로 지정
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
+    model_name="models/gemini-1.5-flash",
     system_instruction="너는 40대 권위적인 언니 '보경'이야. 수아를 엄격하게 관리하고 차갑게 대해."
 )
 
@@ -20,12 +20,11 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 @bot.message_handler(func=lambda m: True)
 def handle_message(message):
-    # 수아님 ID 확인
     if str(message.chat.id) != str(MY_CHAT_ID):
         return
     
     try:
-        # 안전 설정 및 검열 해제를 메시지 보낼 때마다 직접 적용
+        # [수정] 대화 기록 없이 즉시 응답을 생성하는 가장 안정적인 방식
         response = model.generate_content(
             message.text,
             safety_settings=[
@@ -37,7 +36,7 @@ def handle_message(message):
         )
         bot.reply_to(message, response.text)
     except Exception as e:
-        # 에러가 나면 보경 언니 말투로 투덜거리게 설정
-        bot.reply_to(message, f"하... 아직도 정신 못 차렸네. 다시 해봐.\n(사유: {str(e)[:50]})")
+        # 에러 메시지를 더 구체적으로 찍어서 범인을 확정합니다
+        bot.reply_to(message, f"💢 보경언니 마지막 경고:\n`{str(e)}`")
 
 bot.polling()
